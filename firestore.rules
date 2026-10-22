@@ -17,7 +17,8 @@ service cloud.firestore {
    allow update,delete:if false;
   }
   match /v2batches/{b}{
-   allow read:if access(b);
+   allow get:if access(b);
+   allow list:if signed() && resource.data.teacherUid==request.auth.uid;
    allow create:if signed() && request.resource.data.teacherUid==request.auth.uid && get(/databases/$(db)/documents/v2users/$(request.auth.uid)).data.role=='teacher';
    allow update:if owner(b) && request.resource.data.teacherUid==resource.data.teacherUid;
    allow delete:if false;
