@@ -1,0 +1,1 @@
+{"name": "BatchNotes Classroom", "short_name": "Classroom", "description": "Attendance, fees and results for tuition centres", "start_url": "./#/", "scope": "./", "display": "standalone", "background_color": "#faf8f3", "theme_color": "#22684e", "icons": [{"src": "../logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}]}
