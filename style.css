@@ -80,3 +80,4 @@ html[data-theme=dark] a{color:inherit}html[data-theme=dark] .primary{color:#fff}
 .prefs{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;padding:6px 0 18px}.prefs select{width:auto;min-height:36px;padding:4px 8px}.prefs .small{min-height:36px}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 input[type=file]{padding:8px;min-height:44px}
 @media print{.rcard{break-inside:avoid;page-break-after:always;margin:0 0 24px}.prefs{display:none!important}}
+[hidden]{display:none!important}
