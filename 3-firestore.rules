@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{db}/documents {
+    function signedIn() { return request.auth != null; }
+    function teacherOf(batchId) {
+      return signedIn()
+        && get(/databases/$(db)/documents/batches/$(batchId)).data.teacherUid == request.auth.uid;
+    }
+
+    // Join codes: readable one at a time by anyone signed in (students are anonymous)
+    match /codes/{code} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn();
+      allow update, delete: if false;
+    }
+
+    match /batches/{batchId} {
+      allow get: if signedIn();
+      allow list: if signedIn() && resource.data.teacherUid == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.teacherUid == request.auth.uid;
+      allow update, delete: if teacherOf(batchId);
+
+      match /notes/{noteId} {
+        allow read: if signedIn();
+        allow write: if teacherOf(batchId);
+
+        match /chunks/{chunkId} {
+          allow read: if signedIn();
+          allow write: if teacherOf(batchId);
+        }
+
+        // Each student's own annotated copy: private to that student
+        match /copies/{uid} {
+          allow read, write: if signedIn() && request.auth.uid == uid;
+        }
+      }
+
+      match /students/{uid} {
+        allow get: if signedIn() && (request.auth.uid == uid || teacherOf(batchId));
+        allow list: if teacherOf(batchId);
+        allow create: if signedIn() && request.auth.uid == uid;
+        allow update, delete: if false;
+      }
+    }
+  }
+}
