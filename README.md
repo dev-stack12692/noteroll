@@ -1,4 +1,4 @@
-# BatchNotes v2
+# BatchNotes v2.1
 
 A free class study space. Live: https://dev-stack12692.github.io/batchnotes/
 
@@ -17,7 +17,7 @@ This is client-side batch encryption, NOT independently audited E2EE. Account em
 Legacy v1 is preserved at `legacy.html`, in separate original Firebase collections. Legacy data is NOT encrypted and retains its old access model. It is never silently migrated. Start new secure batches for v2.
 
 ## Free-plan limits
-Firebase Spark Auth + Firestore, GitHub Pages hosting. No billing card, paid storage, API key or paid inference. PDFs remain capped at 4 MB; Firestore total storage and daily operations are shared quotas, not unlimited capacity. Base64/encryption adds storage overhead. Image-only scans need OCR before text search works. Eraser only removes added annotations, never PDF source text. Export embeds marks but is not redaction; Latin text is supported by the bundled export font, some non-Latin characters may require keeping the online notebook. Not a full Samsung Notes replacement.
+Firebase Spark Auth + Firestore, GitHub Pages hosting. No billing card, paid storage, API key or paid inference. PDFs remain capped at 4 MB; Firestore total storage and daily operations are shared quotas, not unlimited capacity. Base64/encryption adds storage overhead. Opt-in English printed-text OCR is available per page, with a roughly 5 MB first-use download (allow up to 15 MB). OCR text stays in tab memory, is not synced and may contain mistakes. Eraser only removes added annotations, never PDF source text. Export embeds marks but is not redaction; Exports preserve the original PDF and embed a raster annotation layer, including non-Latin text rendered by the device. Added annotations are not selectable text in the export. Not a full Samsung Notes replacement.
 
 ## Setup
 Static HTML/JS; serve with any local server. Firebase config is public project configuration, not a server secret. Publish `firestore.rules` in Firebase before using v2. Do not add privileged credentials to source. New secure collections are `v2users`, `v2codes`, `v2batches`.
@@ -25,3 +25,6 @@ Static HTML/JS; serve with any local server. Firebase config is public project c
 ## Screenshots
 ![Teacher dashboard v1](shots/teacher.png)
 ![Student notebook v1](shots/student.png)
+
+## v2.1 changes
+Icon PDF toolbar with accessible names, visible focus and selected states; dedicated account password recovery; opt-in per-page OCR; stale reader/list navigation guards; stroke-width defaults; undo/redo availability; pre-load tool guards; join-code and name validation; upload failure status; and Unicode/rotated-page annotation export. Legacy files and data are unchanged.
