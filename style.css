@@ -81,3 +81,4 @@ html[data-theme=dark] a{color:inherit}html[data-theme=dark] .primary{color:#fff}
 input[type=file]{padding:8px;min-height:44px}
 @media print{.rcard{break-inside:avoid;page-break-after:always;margin:0 0 24px}.prefs{display:none!important}}
 [hidden]{display:none!important}
+html[data-theme=dark] .cal div:not(.P):not(.A):not(.L):not(.h){background:#26302b}html[data-theme=dark] .side a:hover{background:#26302b}html[data-theme=dark] .mock-bar{background:#2c3832}
