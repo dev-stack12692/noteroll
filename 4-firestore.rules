@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+ match /databases/{db}/documents {
+  function signed(){return request.auth != null && request.auth.token.firebase.sign_in_provider != 'anonymous';}
+  function owner(b){return signed() && get(/databases/$(db)/documents/v2batches/$(b)).data.teacherUid == request.auth.uid;}
+  function member(b){return signed() && exists(/databases/$(db)/documents/v2batches/$(b)/members/$(request.auth.uid)) && get(/databases/$(db)/documents/v2batches/$(b)/members/$(request.auth.uid)).data.status == 'approved';}
+  function access(b){return owner(b)||member(b);}
+  match /v2users/{uid}{
+   allow read: if signed() && request.auth.uid==uid;
+   allow create: if signed() && request.auth.uid==uid && request.resource.data.keys().hasOnly(['role','name']) && request.resource.data.role in ['teacher','student'] && request.resource.data.name is string;
+   allow update,delete: if false;
+   match /batches/{b}{allow read,write:if signed() && request.auth.uid==uid;}
+  }
+  match /v2codes/{code}{
+   allow get:if signed(); allow list:if false;
+   allow create:if signed() && code.size()==8 && request.resource.data.keys().hasOnly(['batchId','name','teacher']) && owner(request.resource.data.batchId);
+   allow update,delete:if false;
+  }
+  match /v2batches/{b}{
+   allow read:if access(b);
+   allow create:if signed() && request.resource.data.teacherUid==request.auth.uid && get(/databases/$(db)/documents/v2users/$(request.auth.uid)).data.role=='teacher';
+   allow update:if owner(b) && request.resource.data.teacherUid==resource.data.teacherUid;
+   allow delete:if false;
+   match /members/{uid}{
+    allow get:if owner(b)||(signed() && request.auth.uid==uid);
+    allow list:if owner(b);
+    allow create:if signed() && request.auth.uid==uid && request.resource.data.keys().hasOnly(['name','status','joinedAt']) && request.resource.data.status=='pending' && request.resource.data.name is string;
+    allow update:if owner(b) && request.resource.data.keys().hasOnly(['name','status','joinedAt']) && request.resource.data.status in ['approved','revoked'];
+    allow delete:if false;
+   }
+   match /materials/{n}{
+    allow read:if access(b); allow write:if owner(b);
+    match /chunks/{c}{allow read:if access(b);allow write:if owner(b);}
+    match /copies/{uid}{allow read,write:if access(b) && request.auth.uid==uid;}
+   }
+   match /messages/{m}{allow read:if access(b);allow write:if owner(b);}
+  }
+  // Legacy v1: preserved for existing users. New secure batches use v2batches only.
+  function oldTeacher(b){return request.auth!=null && get(/databases/$(db)/documents/batches/$(b)).data.teacherUid==request.auth.uid;}
+  match /codes/{code}{allow get,create:if request.auth!=null;allow list,update,delete:if false;}
+  match /batches/{b}{
+   allow get:if request.auth!=null;
+   allow list:if request.auth!=null && resource.data.teacherUid==request.auth.uid;
+   allow create:if request.auth!=null && request.resource.data.teacherUid==request.auth.uid;
+   allow update,delete:if oldTeacher(b);
+   match /notes/{n}{allow read:if request.auth!=null;allow write:if oldTeacher(b);
+    match /chunks/{c}{allow read:if request.auth!=null;allow write:if oldTeacher(b);}
+    match /copies/{uid}{allow read,write:if request.auth!=null && request.auth.uid==uid;}
+   }
+   match /students/{uid}{allow get:if request.auth!=null && (request.auth.uid==uid||oldTeacher(b));allow list:if oldTeacher(b);allow create:if request.auth!=null && request.auth.uid==uid;allow update,delete:if false;}
+  }
+ }
+}

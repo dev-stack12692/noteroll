@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BatchNotes - Share notes with your class</title>
+<meta name="description" content="Teachers share PDF notes with their batches. Students read, highlight and save their own copy. Free.">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FAF8F3; --card:#FFFFFF; --ink:#1D1B16; --muted:#6E6A5E; --faint:#8F8A7C;
+  --accent:#1E6B4E; --accent-dark:#17573F; --accent-soft:#E4F0E9;
+  --line:#E5E0D3; --danger:#B3402E; --hl:#FFE58A;
+  --radius:12px; --shadow:0 1px 2px rgba(29,27,22,.06),0 4px 14px rgba(29,27,22,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.55;font-size:16px}
+h1,h2,h3,.serif{font-family:'Fraunces',Georgia,serif;font-weight:600;line-height:1.2}
+button{font-family:inherit;cursor:pointer}
+input,textarea{font-family:inherit;font-size:16px}
+.view{display:none;min-height:100vh}
+.view.active{display:block}
+.wrap{max-width:680px;margin:0 auto;padding:0 20px}
+@media(min-width:900px){.wrap{max-width:760px}}
+
+/* top bar */
+.topbar{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--paper);position:sticky;top:0;z-index:20}
+.topbar .brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink)}
+.topbar .brand img{width:28px;height:28px}
+.topbar .brand span{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:19px}
+.topbar .spacer{flex:1}
+.who{font-size:13px;color:var(--muted)}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:10px;padding:11px 18px;font-size:15px;font-weight:500;text-decoration:none;transition:background .15s,border-color .15s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-dark)}
+.btn-ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn-ghost:hover{border-color:var(--ink)}
+.btn-danger{background:#fff;color:var(--danger);border-color:#E7C4BC}
+.btn-danger:hover{background:#FBEFEC}
+.btn-sm{padding:7px 12px;font-size:14px;border-radius:8px}
+.btn-block{width:100%}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+
+/* forms */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px}
+.field input,.field textarea{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+.field input:focus,.field textarea:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent)}
+.hint{font-size:13px;color:var(--faint);margin-top:6px}
+.error-msg{background:#FBEFEC;color:var(--danger);border:1px solid #E7C4BC;border-radius:10px;padding:10px 13px;font-size:14px;margin-bottom:14px;display:none}
+
+/* home */
+.hero{padding:72px 0 28px;text-align:center}
+.hero img{width:64px;height:64px;margin-bottom:18px}
+.hero h1{font-size:clamp(34px,6vw,48px);margin-bottom:12px}
+.hero p{color:var(--muted);font-size:17px;max-width:460px;margin:0 auto}
+.role-grid{display:grid;gap:14px;margin:36px 0 20px}
+@media(min-width:640px){.role-grid{grid-template-columns:1fr 1fr}}
+.role-card{display:block;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:26px 22px;text-decoration:none;color:var(--ink);box-shadow:var(--shadow);transition:border-color .15s}
+.role-card:hover{border-color:var(--accent)}
+.role-card h2{font-size:22px;margin-bottom:8px}
+.role-card p{color:var(--muted);font-size:14.5px}
+.role-card .go{display:inline-block;margin-top:14px;color:var(--accent);font-weight:600;font-size:14px}
+.home-foot{text-align:center;color:var(--faint);font-size:13px;padding:26px 0 40px}
+.steps{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+.step{font-size:13px;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:99px;padding:6px 14px}
+
+/* cards & lists */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.section-title{font-size:24px;margin:26px 0 14px}
+.list{display:grid;gap:10px;margin-bottom:18px}
+.row-item{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
+.row-item .grow{flex:1;min-width:0}
+.row-item .title{font-weight:600;font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-item .sub{font-size:13px;color:var(--muted)}
+.empty{border:1.5px dashed var(--line);border-radius:var(--radius);padding:34px 20px;text-align:center;color:var(--faint);font-size:14.5px;margin-bottom:18px}
+
+/* code display */
+.code-box{background:var(--accent-soft);border:1px solid #C9E0D3;border-radius:var(--radius);padding:18px;text-align:center;margin:14px 0}
+.code-box .label{font-size:12.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-dark)}
+.code-box .code{font-family:'Fraunces',serif;font-size:38px;font-weight:600;letter-spacing:.14em;margin:6px 0 10px}
+.chip{display:inline-block;background:#fff;border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-size:13px;color:var(--muted)}
+
+/* auth */
+.auth-box{max-width:400px;margin:56px auto}
+.tabs{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:20px}
+.tabs button{flex:1;padding:10px;background:#fff;border:none;font-size:14.5px;font-weight:500;color:var(--muted)}
+.tabs button.on{background:var(--accent);color:#fff}
+
+/* reader */
+.reader-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;z-index:30;flex-wrap:wrap}
+.reader-bar .doc-title{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:32vw}
+.tool{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 12px;font-size:13.5px;font-weight:500;color:var(--ink)}
+.tool.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.save-state{font-size:13px;color:var(--faint);margin-left:auto}
+.save-state.saved{color:var(--accent)}
+.pages{max-width:820px;margin:0 auto;padding:18px 12px 60px}
+.page-wrap{position:relative;margin:0 auto 16px;background:#fff;box-shadow:var(--shadow);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.page-wrap canvas{display:block;width:100%}
+.ann-layer{position:absolute;inset:0;touch-action:none}
+.ann-layer.readonly{pointer-events:none}
+.hlmark{position:absolute;background:var(--hl);opacity:.55;border-radius:3px;pointer-events:auto}
+.notepin{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;pointer-events:auto;box-shadow:var(--shadow)}
+.ann-layer.erase .hlmark,.ann-layer.erase .notepin{cursor:not-allowed}
+.note-pop{position:absolute;z-index:40;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 6px 24px rgba(29,27,22,.14);padding:12px;width:min(280px,80vw)}
+.note-pop textarea{width:100%;min-height:74px;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:14px;resize:vertical}
+.note-pop .row{display:flex;gap:8px;margin-top:8px;justify-content:flex-end}
+.drag-preview{position:absolute;background:var(--hl);opacity:.45;border:1.5px dashed #D9B93F;border-radius:3px;pointer-events:none}
+
+/* misc */
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 18px;border-radius:10px;font-size:14px;z-index:99;opacity:0;transition:opacity .2s;pointer-events:none;max-width:88vw;text-align:center}
+.toast.show{opacity:1}
+.spinner{width:20px;height:20px;border:2.5px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;display:inline-block;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.center-load{text-align:center;padding:70px 0;color:var(--muted)}
+.progress-line{height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:8px}
+.progress-line i{display:block;height:100%;background:var(--accent);width:0%;transition:width .2s}
+.divider{border:none;border-top:1px solid var(--line);margin:22px 0}
+@media(max-width:560px){
+  .reader-bar .doc-title{max-width:100%;width:100%;order:3}
+  .hero{padding:48px 0 22px}
+}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<section id="view-home" class="view">
+  <div class="wrap">
+    <div class="hero">
+      <img src="logo.svg" alt="BatchNotes logo">
+      <h1>BatchNotes</h1>
+      <p>Teachers share PDF notes with their batches. Students read, highlight and keep their own copy. Free, nothing to install.</p>
+      <div class="steps">
+        <span class="step">1. Teacher makes a batch</span>
+        <span class="step">2. Shares the batch code</span>
+        <span class="step">3. Students read &amp; annotate</span>
+      </div>
+    </div>
+    <div class="role-grid">
+      <a class="role-card" href="#teacher">
+        <h2>For teachers</h2>
+        <p>Create batches, upload notes as PDF, share one code with your class. Your originals stay untouched.</p>
+        <span class="go">Teacher login &rarr;</span>
+      </a>
+      <a class="role-card" href="#student">
+        <h2>For students</h2>
+        <p>Enter your batch code, read the notes, highlight and add your own notes. Your copy saves automatically.</p>
+        <span class="go">Join a batch &rarr;</span>
+      </a>
+    </div>
+    <div class="home-foot">Works on phone, tablet and computer.</div>
+  </div>
+</section>
+
+<!-- TEACHER AUTH -->
+<section id="view-teacher-auth" class="view">
+  <header class="topbar">
+    <a class="brand" href="#"><img src="logo.svg" alt=""><span>BatchNotes</span></a>
+    <div class="spacer"></div>
+    <a class="btn btn-ghost btn-sm" href="#student">I am a student</a>
+  </header>
+  <div class="wrap">
+    <div class="auth-box">
+      <h1 style="font-size:28px;margin-bottom:6px">Teacher login</h1>
+      <p class="hint" style="margin-bottom:18px">Only teachers need an account. Students join with just a code.</p>
+      <div class="tabs">
+        <button id="tab-login" class="on" type="button">Log in</button>
+        <button id="tab-signup" type="button">Sign up</button>
+      </div>
+      <div class="error-msg" id="auth-error"></div>
+      <div class="field"><label for="auth-name" id="name-label" style="display:none">Your name</label><input id="auth-name" type="text" autocomplete="name" placeholder="e.g. Rahul Sir" style="display:none"></div>
+      <div class="field"><label for="auth-email">Email</label><input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
+      <div class="field"><label for="auth-pass">Password</label><input id="auth-pass" type="password" autocomplete="current-password" placeholder="6+ characters"></div>
+      <button class="btn btn-primary btn-block" id="auth-go">Log in</button>
+    </div>
+  </div>
+</section>
+
+<!-- TEACHER DASHBOARD -->
+<section id="view-teacher" class="view">
+  <header class="topbar">
+    <a class="brand" href="#"><img src="logo.svg" alt=""><span>BatchNotes</span></a>
+    <div class="spacer"></div>
+    <span class="who" id="teacher-who"></span>
+    <button class="btn btn-ghost btn-sm" id="teacher-signout">Sign out</button>
+  </header>
+  <div class="wrap">
+    <div id="teacher-batches">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <h1 class="section-title" style="margin-bottom:0">Your batches</h1>
+        <button class="btn btn-primary btn-sm" id="new-batch-btn">+ New batch</button>
+      </div>
+      <p class="hint" style="margin:8px 0 18px">Each batch gets its own code. Share the code with that class.</p>
+      <div id="new-batch-form" class="card" style="display:none;margin-bottom:18px">
+        <div class="field"><label for="batch-name">Batch name</label><input id="batch-name" type="text" placeholder="e.g. Class 10 Physics - Morning"></div>
+        <button class="btn btn-primary" id="create-batch">Create batch</button>
+        <button class="btn btn-ghost" id="cancel-batch">Cancel</button>
+      </div>
+      <div id="batch-list" class="list"></div>
+      <div id="batch-empty" class="empty" style="display:none">No batches yet. Create your first batch to get a code.</div>
+    </div>
+
+    <div id="teacher-batch-detail" style="display:none">
+      <button class="btn btn-ghost btn-sm" id="back-to-batches">&larr; All batches</button>
+      <h1 class="section-title" id="detail-batch-name"></h1>
+      <div class="code-box">
+        <div class="label">Batch code</div>
+        <div class="code" id="detail-code"></div>
+        <button class="btn btn-ghost btn-sm" id="copy-code">Copy code</button>
+        <button class="btn btn-ghost btn-sm" id="copy-link">Copy join link</button>
+      </div>
+      <h2 class="section-title" style="font-size:19px">Notes</h2>
+      <div class="card" style="margin-bottom:16px">
+        <div class="field" style="margin-bottom:8px">
+          <label for="pdf-title">Note title</label>
+          <input id="pdf-title" type="text" placeholder="e.g. Chapter 4 - Chemical reactions">
+        </div>
+        <input type="file" id="pdf-file" accept="application/pdf" style="display:none">
+        <button class="btn btn-primary" id="pick-pdf">Choose PDF &amp; upload</button>
+        <div class="hint">PDF only, up to 4 MB. Tip: scan apps like Notes/CamScanner can shrink large scans.</div>
+        <div class="progress-line" id="upload-progress" style="display:none"><i></i></div>
+      </div>
+      <div id="note-list" class="list"></div>
+      <div id="note-empty" class="empty" style="display:none">No notes in this batch yet.</div>
+      <h2 class="section-title" style="font-size:19px">Students joined</h2>
+      <div id="student-list" class="list"></div>
+      <div id="student-empty" class="empty" style="display:none">No students have joined yet. Share the code above.</div>
+    </div>
+  </div>
+</section>
+
+<!-- STUDENT JOIN -->
+<section id="view-student-join" class="view">
+  <header class="topbar">
+    <a class="brand" href="#"><img src="logo.svg" alt=""><span>BatchNotes</span></a>
+    <div class="spacer"></div>
+    <a class="btn btn-ghost btn-sm" href="#teacher">I am a teacher</a>
+  </header>
+  <div class="wrap">
+    <div class="auth-box">
+      <h1 style="font-size:28px;margin-bottom:6px">Join your batch</h1>
+      <p class="hint" style="margin-bottom:18px">Get the 6-letter code from your teacher. No account needed.</p>
+      <div class="error-msg" id="join-error"></div>
+      <div class="field"><label for="join-code">Batch code</label><input id="join-code" type="text" maxlength="6" placeholder="e.g. K7M2PQ" style="text-transform:uppercase;letter-spacing:.2em;font-weight:600"></div>
+      <div class="field"><label for="join-name">Your name</label><input id="join-name" type="text" placeholder="So your teacher knows you joined"></div>
+      <button class="btn btn-primary btn-block" id="join-go">Join batch</button>
+    </div>
+  </div>
+</section>
+
+<!-- STUDENT DASHBOARD -->
+<section id="view-student" class="view">
+  <header class="topbar">
+    <a class="brand" href="#"><img src="logo.svg" alt=""><span>BatchNotes</span></a>
+    <div class="spacer"></div>
+    <span class="who" id="student-who"></span>
+    <button class="btn btn-ghost btn-sm" id="student-leave">Leave</button>
+  </header>
+  <div class="wrap">
+    <h1 class="section-title" id="student-batch-name"></h1>
+    <p class="hint" style="margin-bottom:16px">Open a note to read it. Your highlights and notes save to your own copy on this device.</p>
+    <div id="student-note-list" class="list"></div>
+    <div id="student-note-empty" class="empty" style="display:none">Your teacher has not added notes yet. Check back soon.</div>
+  </div>
+</section>
+
+<!-- READER -->
+<section id="view-reader" class="view">
+  <div class="reader-bar">
+    <button class="btn btn-ghost btn-sm" id="reader-back">&larr; Back</button>
+    <span class="doc-title" id="reader-title"></span>
+    <button class="tool" id="tool-hl" type="button">Highlight</button>
+    <button class="tool" id="tool-note" type="button">Note</button>
+    <button class="tool" id="tool-erase" type="button">Erase</button>
+    <button class="tool" id="tool-dl" type="button">Download</button>
+    <span class="save-state" id="save-state"></span>
+  </div>
+  <div class="pages" id="pages"></div>
+  <div class="center-load" id="reader-loading"><span class="spinner"></span> Loading note...</div>
+</section>
+
+<div class="note-pop" id="note-pop" style="display:none">
+  <textarea id="note-text" placeholder="Write your note..."></textarea>
+  <div class="row">
+    <button class="btn btn-danger btn-sm" id="note-delete">Delete</button>
+    <button class="btn btn-primary btn-sm" id="note-save">Save</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signInAnonymously, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, addDoc, deleteDoc, collection, query, where, orderBy, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBdkllhnGl-wF7qr_jd0-kb1nSz2yeNj1o",
+  authDomain: "batchnotes.firebaseapp.com",
+  projectId: "batchnotes",
+  messagingSenderId: "1001787838535",
+  appId: "1:1001787838535:web:9c37147c4950a072252162"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+const $ = id => document.getElementById(id);
+const views = ["home","teacher-auth","teacher","student-join","student","reader"];
+function show(name){
+  views.forEach(v => $("view-"+v).classList.toggle("active", v===name));
+  window.scrollTo(0,0);
+}
+let toastT;
+function toast(msg){
+  const t=$("toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2600);
+}
+function showErr(id,msg){ const e=$(id); e.textContent=msg; e.style.display=msg?"block":"none"; }
+function authErr(e){
+  const m={ "auth/invalid-email":"That email does not look right.","auth/user-not-found":"No account with this email.","auth/wrong-password":"Wrong password.","auth/invalid-credential":"Email or password is wrong.","auth/email-already-in-use":"This email already has an account. Log in instead.","auth/weak-password":"Password needs at least 6 characters.","auth/too-many-requests":"Too many tries. Wait a minute and try again." };
+  return m[e.code] || ("Something went wrong ("+ (e.code||"error") +"). Try again.");
+}
+const CODE_CHARS="ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+function makeCode(){ let c=""; for(let i=0;i<6;i++) c+=CODE_CHARS[Math.floor(Math.random()*CODE_CHARS.length)]; return c; }
+const CHUNK_BYTES=700000, MAX_PDF=4*1024*1024, pad=i=>String(i).padStart(6,"0");
+function u8ToB64(u8){ let s=""; const st=0x8000; for(let i=0;i<u8.length;i+=st){ s+=String.fromCharCode.apply(null,u8.subarray(i,i+st)); } return btoa(s); }
+function b64ToU8(b64){ const bin=atob(b64); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return u; }
+function fmtDate(ts){ if(!ts) return ""; const d=ts.toDate?ts.toDate():new Date(ts); return d.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"}); }
+
+const state={ user:null, authReady:false, role:null, batchId:null, batch:null, noteId:null, note:null, pdfBytes:null, anns:{}, tool:"none", saveTimer:null, dirty:false };
+
+/* ---------- routing ---------- */
+function route(){
+  const h=location.hash;
+  if(h.startsWith("#join/")){ const c=h.slice(6).toUpperCase(); show("student-join"); $("join-code").value=c; return; }
+  if(h==="#teacher"){
+    if(state.user && !state.user.isAnonymous){ enterTeacher(); } else show("teacher-auth");
+    return;
+  }
+  if(h==="#student"){
+    const saved=JSON.parse(localStorage.getItem("bn_student")||"null");
+    if(state.user && state.user.isAnonymous && saved){ enterStudent(saved.batchId, saved.name); } else show("student-join");
+    return;
+  }
+  show("home");
+}
+window.addEventListener("hashchange",route);
+onAuthStateChanged(auth,u=>{ state.user=u; if(!state.authReady){ state.authReady=true; route(); } else if(!u){ show("home"); } });
+
+/* ---------- teacher auth ---------- */
+let authMode="login";
+$("tab-login").onclick=()=>{ authMode="login"; $("tab-login").classList.add("on"); $("tab-signup").classList.remove("on"); $("auth-name").style.display="none"; $("name-label").style.display="none"; $("auth-go").textContent="Log in"; showErr("auth-error",""); };
+$("tab-signup").onclick=()=>{ authMode="signup"; $("tab-signup").classList.add("on"); $("tab-login").classList.remove("on"); $("auth-name").style.display="block"; $("name-label").style.display="block"; $("auth-go").textContent="Create account"; showErr("auth-error",""); };
+$("auth-go").onclick=async()=>{
+  showErr("auth-error","");
+  const email=$("auth-email").value.trim(), pass=$("auth-pass").value, name=$("auth-name").value.trim();
+  if(!email||!pass){ showErr("auth-error","Enter your email and password."); return; }
+  $("auth-go").disabled=true;
+  try{
+    if(authMode==="signup"){
+      if(!name){ showErr("auth-error","Enter your name so students know whose batch it is."); $("auth-go").disabled=false; return; }
+      const cred=await createUserWithEmailAndPassword(auth,email,pass);
+      await updateProfile(cred.user,{displayName:name});
+    } else {
+      await signInWithEmailAndPassword(auth,email,pass);
+    }
+    enterTeacher();
+  }catch(e){ showErr("auth-error",authErr(e)); }
+  $("auth-go").disabled=false;
+};
+$("teacher-signout").onclick=async()=>{ await signOut(auth); location.hash=""; show("home"); };
+
+/* ---------- teacher dashboard ---------- */
+async function enterTeacher(){
+  state.role="teacher";
+  $("teacher-who").textContent=state.user.displayName||state.user.email;
+  show("teacher"); $("teacher-batches").style.display="block"; $("teacher-batch-detail").style.display="none";
+  const q=query(collection(db,"batches"),where("teacherUid","==",state.user.uid));
+  const snap=await getDocs(q);
+  const list=$("batch-list"); list.innerHTML="";
+  const batches=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+  $("batch-empty").style.display=batches.length?"none":"block";
+  for(const b of batches){
+    const row=document.createElement("div"); row.className="row-item";
+    row.innerHTML=`<div class="grow"><div class="title"></div><div class="sub">Code: <b>${b.code}</b> &middot; ${fmtDate(b.createdAt)}</div></div><button class="btn btn-ghost btn-sm">Open</button>`;
+    row.querySelector(".title").textContent=b.name;
+    row.querySelector("button").onclick=()=>openBatch(b.id,b);
+    list.appendChild(row);
+  }
+}
+$("new-batch-btn").onclick=()=>{ $("new-batch-form").style.display="block"; $("batch-name").focus(); };
+$("cancel-batch").onclick=()=>{ $("new-batch-form").style.display="none"; $("batch-name").value=""; };
+$("create-batch").onclick=async()=>{
+  const name=$("batch-name").value.trim();
+  if(!name){ toast("Give the batch a name first"); return; }
+  $("create-batch").disabled=true;
+  try{
+    let code=makeCode(), tries=0;
+    while((await getDoc(doc(db,"codes",code))).exists() && ++tries<10) code=makeCode();
+    const ref=await addDoc(collection(db,"batches"),{name,code,teacherUid:state.user.uid,teacherName:state.user.displayName||"",createdAt:serverTimestamp()});
+    await setDoc(doc(db,"codes",code),{batchId:ref.id});
+    $("new-batch-form").style.display="none"; $("batch-name").value="";
+    enterTeacher();
+    toast("Batch created. Code: "+code);
+  }catch(e){ toast("Could not create batch: "+(e.code||"")); }
+  $("create-batch").disabled=false;
+};
+$("back-to-batches").onclick=()=>enterTeacher();
+$("copy-code").onclick=()=>{ navigator.clipboard.writeText(state.batch.code).then(()=>toast("Code copied")); };
+$("copy-link").onclick=()=>{ navigator.clipboard.writeText(location.origin+location.pathname+"#join/"+state.batch.code).then(()=>toast("Join link copied")); };
+
+async function openBatch(id,data){
+  state.batchId=id; state.batch=data;
+  $("teacher-batches").style.display="none"; $("teacher-batch-detail").style.display="block";
+  $("detail-batch-name").textContent=data.name;
+  $("detail-code").textContent=data.code;
+  const notes=await getDocs(query(collection(db,"batches",id,"notes"),orderBy("createdAt","desc")));
+  const nl=$("note-list"); nl.innerHTML="";
+  $("note-empty").style.display=notes.empty?"block":"none";
+  for(const d of notes.docs){
+    const n=d.data();
+    const row=document.createElement("div"); row.className="row-item";
+    row.innerHTML=`<div class="grow"><div class="title"></div><div class="sub">${(n.bytes/1024).toFixed(0)} KB &middot; ${fmtDate(n.createdAt)}</div></div><button class="btn btn-ghost btn-sm act-open">Open</button><button class="btn btn-danger btn-sm act-del">Delete</button>`;
+    row.querySelector(".title").textContent=n.title;
+    row.querySelector(".act-open").onclick=()=>openReader(id,d.id,n,"teacher");
+    row.querySelector(".act-del").onclick=async()=>{
+      if(!confirm("Delete this note for the whole batch? Students' own copies keep their annotations.")) return;
+      for(let i=0;i<n.chunkCount;i++) await deleteDoc(doc(db,"batches",id,"notes",d.id,"chunks",pad(i)));
+      await deleteDoc(doc(db,"batches",id,"notes",d.id));
+      openBatch(id,state.batch); toast("Note deleted");
+    };
+    nl.appendChild(row);
+  }
+  const studs=await getDocs(query(collection(db,"batches",id,"students"),orderBy("joinedAt","desc"))).catch(()=>null);
+  const sl=$("student-list"); sl.innerHTML="";
+  $("student-empty").style.display=(!studs||studs.empty)?"block":"none";
+  if(studs) for(const d of studs.docs){
+    const s=d.data();
+    const row=document.createElement("div"); row.className="row-item";
+    row.innerHTML=`<div class="grow"><div class="title"></div><div class="sub">Joined ${fmtDate(s.joinedAt)}</div></div>`;
+    row.querySelector(".title").textContent=s.name||"Student";
+    sl.appendChild(row);
+  }
+}
+
+/* ---------- upload ---------- */
+$("pick-pdf").onclick=()=>$("pdf-file").click();
+$("pdf-file").onchange=async()=>{
+  const f=$("pdf-file").files[0]; $("pdf-file").value="";
+  if(!f) return;
+  if(f.type!=="application/pdf" && !f.name.toLowerCase().endsWith(".pdf")){ toast("That is not a PDF"); return; }
+  if(f.size>MAX_PDF){ toast("PDF is over 4 MB. Compress it and try again."); return; }
+  const title=$("pdf-title").value.trim()||f.name.replace(/\.pdf$/i,"");
+  const bar=$("upload-progress"); bar.style.display="block"; const fill=bar.querySelector("i");
+  $("pick-pdf").disabled=true;
+  try{
+    const u8=new Uint8Array(await f.arrayBuffer());
+    const chunkCount=Math.ceil(u8.length/CHUNK_BYTES);
+    const noteRef=await addDoc(collection(db,"batches",state.batchId,"notes"),{title,bytes:u8.length,chunkCount,createdAt:serverTimestamp()});
+    for(let i=0;i<chunkCount;i++){
+      const part=u8.subarray(i*CHUNK_BYTES,(i+1)*CHUNK_BYTES);
+      await setDoc(doc(db,"batches",state.batchId,"notes",noteRef.id,"chunks",pad(i)),{d:u8ToB64(part)});
+      fill.style.width=Math.round(((i+1)/chunkCount)*100)+"%";
+    }
+    $("pdf-title").value=""; toast("Note uploaded");
+    openBatch(state.batchId,state.batch);
+  }catch(e){ toast("Upload failed: "+(e.code||"")); }
+  bar.style.display="none"; fill.style.width="0%"; $("pick-pdf").disabled=false;
+};
+
+/* ---------- student ---------- */
+$("join-go").onclick=async()=>{
+  showErr("join-error","");
+  const code=$("join-code").value.trim().toUpperCase(), name=$("join-name").value.trim();
+  if(code.length!==6){ showErr("join-error","The batch code is 6 letters/numbers."); return; }
+  if(!name){ showErr("join-error","Enter your name."); return; }
+  $("join-go").disabled=true;
+  try{
+    if(!state.user || !state.user.isAnonymous){
+      if(state.user) await signOut(auth);
+      await signInAnonymously(auth);
+    }
+    const codeDoc=await getDoc(doc(db,"codes",code));
+    if(!codeDoc.exists()){ showErr("join-error","No batch with that code. Check it with your teacher."); $("join-go").disabled=false; return; }
+    const batchId=codeDoc.data().batchId;
+    const b=await getDoc(doc(db,"batches",batchId));
+    if(!b.exists()){ showErr("join-error","That batch no longer exists."); $("join-go").disabled=false; return; }
+    await setDoc(doc(db,"batches",batchId,"students",auth.currentUser.uid),{name,joinedAt:serverTimestamp()},{merge:true});
+    localStorage.setItem("bn_student",JSON.stringify({batchId,name}));
+    enterStudent(batchId,name);
+  }catch(e){ showErr("join-error","Could not join ("+(e.code||"error")+"). Check your internet and try again."); }
+  $("join-go").disabled=false;
+};
+$("student-leave").onclick=async()=>{ localStorage.removeItem("bn_student"); await signOut(auth); location.hash=""; show("home"); };
+
+async function enterStudent(batchId,name){
+  state.role="student"; state.batchId=batchId;
+  const b=await getDoc(doc(db,"batches",batchId));
+  if(!b.exists()){ localStorage.removeItem("bn_student"); show("student-join"); return; }
+  state.batch=b.data();
+  $("student-who").textContent=name;
+  $("student-batch-name").textContent=state.batch.name+(state.batch.teacherName? " · "+state.batch.teacherName : "");
+  show("student");
+  const notes=await getDocs(query(collection(db,"batches",batchId,"notes"),orderBy("createdAt","desc")));
+  const nl=$("student-note-list"); nl.innerHTML="";
+  $("student-note-empty").style.display=notes.empty?"block":"none";
+  for(const d of notes.docs){
+    const n=d.data();
+    const row=document.createElement("div"); row.className="row-item";
+    row.innerHTML=`<div class="grow"><div class="title"></div><div class="sub">${fmtDate(n.createdAt)}</div></div><button class="btn btn-primary btn-sm">Read</button>`;
+    row.querySelector(".title").textContent=n.title;
+    row.querySelector("button").onclick=()=>openReader(batchId,d.id,n,"student");
+    nl.appendChild(row);
+  }
+}
+
+/* ---------- reader ---------- */
+async function fetchPdfBytes(batchId,noteId,chunkCount){
+  const parts=await Promise.all([...Array(chunkCount).keys()].map(i=>getDoc(doc(db,"batches",batchId,"notes",noteId,"chunks",pad(i)))));
+  return b64ToU8(parts.map(p=>p.data().d).join(""));
+}
+async function openReader(batchId,noteId,note,mode){
+  state.role=mode; state.noteId=noteId; state.note=note; state.anns={}; state.tool="none"; state.dirty=false;
+  show("reader");
+  $("reader-title").textContent=note.title;
+  $("pages").innerHTML=""; $("reader-loading").style.display="block";
+  $("save-state").textContent=""; $("save-state").className="save-state";
+  const editable=(mode==="student");
+  ["tool-hl","tool-note","tool-erase"].forEach(t=>$(t).style.display=editable?"":"none");
+  updateTools();
+  try{
+    state.pdfBytes=await fetchPdfBytes(batchId,noteId,note.chunkCount);
+    if(editable){
+      const copy=await getDoc(doc(db,"batches",batchId,"notes",noteId,"copies",state.user.uid));
+      if(copy.exists()&&copy.data().data){ try{ state.anns=JSON.parse(copy.data().data); }catch(e){ state.anns={}; } }
+    }
+    await renderPdf();
+  }catch(e){ toast("Could not open this note"); $("reader-back").click(); }
+  $("reader-loading").style.display="none";
+}
+async function renderPdf(){
+  const pdf=await pdfjsLib.getDocument({data:state.pdfBytes}).promise;
+  const pagesEl=$("pages");
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  for(let n=1;n<=pdf.numPages;n++){
+    const page=await pdf.getPage(n);
+    const wrap=document.createElement("div"); wrap.className="page-wrap";
+    const canvas=document.createElement("canvas");
+    const layer=document.createElement("div"); layer.className="ann-layer"+(state.role==="teacher"?" readonly":""); layer.dataset.page=n;
+    wrap.append(canvas,layer); pagesEl.appendChild(wrap);
+    const base=page.getViewport({scale:1});
+    const scale=(wrap.clientWidth||pagesEl.clientWidth||360)/base.width;
+    const vp=page.getViewport({scale:scale*dpr});
+    canvas.width=vp.width; canvas.height=vp.height;
+    canvas.style.aspectRatio=base.width+"/"+base.height;
+    layer.style.aspectRatio=base.width+"/"+base.height;
+    await page.render({canvasContext:canvas.getContext("2d"),viewport:vp}).promise;
+    drawAnns(layer,n);
+    wireLayer(layer,n);
+  }
+}
+function drawAnns(layer,page){
+  layer.querySelectorAll(".hlmark,.notepin").forEach(e=>e.remove());
+  const a=state.anns[page]||{hl:[],notes:[]};
+  a.hl.forEach((h,i)=>{
+    const d=document.createElement("div"); d.className="hlmark"; d.dataset.page=page; d.dataset.idx=i;
+    d.style.left=(h.x*100)+"%"; d.style.top=(h.y*100)+"%"; d.style.width=(h.w*100)+"%"; d.style.height=(h.h*100)+"%";
+    layer.appendChild(d);
+  });
+  a.notes.forEach((nt,i)=>{
+    const d=document.createElement("div"); d.className="notepin"; d.dataset.page=page; d.dataset.idx=i; d.textContent=i+1; d.title=nt.text;
+    d.style.left=(nt.x*100)+"%"; d.style.top=(nt.y*100)+"%";
+    layer.appendChild(d);
+  });
+}
+function pageAnn(page){ if(!state.anns[page]) state.anns[page]={hl:[],notes:[]}; return state.anns[page]; }
+function relPos(e,layer){ const r=layer.getBoundingClientRect(); return {x:Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)), y:Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))}; }
+
+let drag=null;
+function wireLayer(layer,page){
+  layer.addEventListener("pointerdown",e=>{
+    if(state.role!=="student") return;
+    const mark=e.target.closest(".hlmark,.notepin");
+    if(state.tool==="erase"){
+      if(mark){ const a=pageAnn(page); if(mark.classList.contains("hlmark")) a.hl.splice(+mark.dataset.idx,1); else a.notes.splice(+mark.dataset.idx,1); drawAnns(layer,page); scheduleSave(); }
+      return;
+    }
+    if(mark){
+      if(mark.classList.contains("notepin")&&state.tool!=="hl"){ openNotePop(page,+mark.dataset.idx,mark,layer); }
+      return;
+    }
+    const p=relPos(e,layer);
+    if(state.tool==="note"){
+      const a=pageAnn(page); a.notes.push({x:p.x,y:p.y,text:""});
+      drawAnns(layer,page); scheduleSave();
+      const pins=layer.querySelectorAll(".notepin");
+      openNotePop(page,a.notes.length-1,pins[pins.length-1],layer);
+      return;
+    }
+    if(state.tool==="hl"){
+      e.preventDefault(); layer.setPointerCapture(e.pointerId);
+      const pv=document.createElement("div"); pv.className="drag-preview"; layer.appendChild(pv);
+      drag={layer,page,start:p,pv};
+    }
+  });
+  layer.addEventListener("pointermove",e=>{
+    if(!drag||drag.layer!==layer) return;
+    const p=relPos(e,layer);
+    const x=Math.min(drag.start.x,p.x), y=Math.min(drag.start.y,p.y), w=Math.abs(p.x-drag.start.x), h=Math.abs(p.y-drag.start.y);
+    drag.pv.style.left=(x*100)+"%"; drag.pv.style.top=(y*100)+"%"; drag.pv.style.width=(w*100)+"%"; drag.pv.style.height=(h*100)+"%";
+  });
+  layer.addEventListener("pointerup",e=>{
+    if(!drag||drag.layer!==layer) return;
+    const p=relPos(e,layer);
+    const x=Math.min(drag.start.x,p.x), y=Math.min(drag.start.y,p.y), w=Math.abs(p.x-drag.start.x), h=Math.abs(p.y-drag.start.y);
+    drag.pv.remove();
+    if(w>0.02&&h>0.01){ pageAnn(page).hl.push({x,y,w,h}); scheduleSave(); }
+    drawAnns(layer,page); drag=null;
+  });
+}
+
+let popCtx=null;
+function openNotePop(page,idx,pinEl,layer){
+  const pop=$("note-pop");
+  popCtx={page,idx,layer};
+  $("note-text").value=pageAnn(page).notes[idx].text||"";
+  pop.style.display="block";
+  const r=pinEl.getBoundingClientRect();
+  pop.style.position="fixed";
+  pop.style.left=Math.min(window.innerWidth-300,Math.max(10,r.left-100))+"px";
+  pop.style.top=Math.min(window.innerHeight-200,Math.max(10,r.bottom+10))+"px";
+  $("note-text").focus();
+}
+$("note-save").onclick=()=>{
+  if(!popCtx) return;
+  const a=pageAnn(popCtx.page);
+  const txt=$("note-text").value.trim();
+  if(!txt){ a.notes.splice(popCtx.idx,1); } else a.notes[popCtx.idx].text=txt;
+  drawAnns(popCtx.layer,popCtx.page); scheduleSave();
+  $("note-pop").style.display="none"; popCtx=null;
+};
+$("note-delete").onclick=()=>{
+  if(!popCtx) return;
+  pageAnn(popCtx.page).notes.splice(popCtx.idx,1);
+  drawAnns(popCtx.layer,popCtx.page); scheduleSave();
+  $("note-pop").style.display="none"; popCtx=null;
+};
+document.addEventListener("pointerdown",e=>{
+  if(popCtx&&!e.target.closest("#note-pop")&&!e.target.closest(".notepin")){ $("note-save").click(); }
+},true);
+
+function updateTools(){
+  ["tool-hl","tool-note","tool-erase"].forEach(t=>$(t).classList.toggle("on",
+    (t==="tool-hl"&&state.tool==="hl")||(t==="tool-note"&&state.tool==="note")||(t==="tool-erase"&&state.tool==="erase")));
+  document.querySelectorAll(".ann-layer").forEach(l=>l.classList.toggle("erase",state.tool==="erase"));
+}
+$("tool-hl").onclick=()=>{ state.tool=state.tool==="hl"?"none":"hl"; updateTools(); };
+$("tool-note").onclick=()=>{ state.tool=state.tool==="note"?"none":"note"; updateTools(); };
+$("tool-erase").onclick=()=>{ state.tool=state.tool==="erase"?"none":"erase"; updateTools(); };
+$("tool-dl").onclick=()=>{
+  if(!state.pdfBytes) return;
+  const blob=new Blob([state.pdfBytes],{type:"application/pdf"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download=(state.note?.title||"note")+".pdf"; a.click(); URL.revokeObjectURL(a.href);
+};
+function scheduleSave(){
+  if(state.role!=="student") return;
+  state.dirty=true; $("save-state").textContent="Saving..."; $("save-state").className="save-state";
+  clearTimeout(state.saveTimer);
+  state.saveTimer=setTimeout(saveNow,1200);
+}
+async function saveNow(){
+  if(!state.dirty||state.role!=="student") return;
+  state.dirty=false;
+  try{
+    const saved=JSON.parse(localStorage.getItem("bn_student")||"{}");
+    await setDoc(doc(db,"batches",state.batchId,"notes",state.noteId,"copies",state.user.uid),{name:saved.name||"Student",data:JSON.stringify(state.anns),updatedAt:serverTimestamp()});
+    $("save-state").textContent="Saved"; $("save-state").className="save-state saved";
+  }catch(e){ $("save-state").textContent="Could not save - will retry"; state.dirty=true; clearTimeout(state.saveTimer); state.saveTimer=setTimeout(saveNow,4000); }
+}
+$("reader-back").onclick=async()=>{
+  if(state.dirty) await saveNow();
+  $("note-pop").style.display="none"; popCtx=null;
+  if(state.role==="teacher"){ show("teacher"); openBatch(state.batchId,state.batch); }
+  else enterStudent(state.batchId,(JSON.parse(localStorage.getItem("bn_student")||"{}").name)||"");
+};
+window.addEventListener("beforeunload",e=>{ if(state.dirty){ saveNow(); e.preventDefault(); } });
+</script>
+</body>
+</html>
