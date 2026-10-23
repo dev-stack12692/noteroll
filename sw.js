@@ -1,4 +1,4 @@
-const V='batchnotes-3',OWN=['','index.html','style.css','app.js','manifest.json','logo.svg'];
+const V='noteroll-1',OWN=['','index.html','style.css','app.js','manifest.json','logo.svg'];
 const base=new URL('./',self.registration.scope).pathname;
 self.addEventListener('install',e=>{e.waitUntil(self.skipWaiting())});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
